@@ -87,6 +87,9 @@ canvas {
     cursor: pointer;
     box-shadow: 0 4px 12px rgba(0,0,0,0.5);
     transition: background 0.2s;
+    * {
+    -webkit-tap-highlight-color: transparent; /* Tắt nháy xanh cho toàn bộ các phần tử */
+}
 }
 
 .btn-submit:active {
@@ -145,10 +148,9 @@ function getPos(e) {
         y: clientY - rect.top
     };
 }
-
 function start(e) {
     if (e.target === sendBtn) return;
-    
+    if (e.cancelable) e.preventDefault(); 
     drawing = true;
     const p = getPos(e);
     lastX = p.x;
@@ -208,6 +210,7 @@ if ("serviceWorker" in navigator) {
             .catch(err => console.error("Lỗi SW:", err));
     });
 }
+
 </script>
 
 </body>
