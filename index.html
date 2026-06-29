@@ -3,24 +3,33 @@
 <head>
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#000000">
-    <!-- Đã sửa dòng dưới đây -->
     <link rel="apple-touch-icon" href="icon-192.png">
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="mobile-web-app-capable" content="yes">
+    
     <title>Scribe Practice App</title>
 
 <style>
-    body, .card, canvas {
-    -webkit-user-select: none; /* Cho Safari/iOS */
-    -moz-user-select: none;    /* Cho Firefox */
-    -ms-user-select: none;     /* Cho IE/Edge cũ */
-    user-select: none;         /* Chuẩn chung (Android/Chrome...) */
+/* Chặn triệt để highlight, lựa chọn text, và menu ngữ cảnh hệ thống khi cài app */
+body, .card, canvas, .canvas-container, button {
+    -webkit-user-select: none;   /* Safari/iOS */
+    -moz-user-select: none;      /* Firefox */
+    -ms-user-select: none;       /* IE/Edge */
+    user-select: none;           /* Chrome/Android... */
+    -webkit-touch-callout: none; /* QUAN TRỌNG: Chặn menu copy/quét chữ/kính lúp trên iOS/Android */
+    -webkit-tap-highlight-color: transparent; /* Tắt nháy xanh khi nhấn vùng canvas/nút */
 }
+
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
     font-family: Arial, Helvetica, sans-serif;
+    -webkit-tap-highlight-color: transparent;
 }
 
 body {
@@ -68,10 +77,9 @@ canvas {
     left: 0;
     width: 100%;
     height: 100%;
-    touch-action: none;
+    touch-action: none; /* Chặn cuộn trang/phóng to thu nhỏ khi đang vẽ */
 }
 
-/* ĐOẠN CODE ĐÃ SỬA CÚ PHÁP */
 .btn-submit {
     position: absolute;
     right: 8px;
@@ -87,16 +95,7 @@ canvas {
     cursor: pointer;
     box-shadow: 0 4px 12px rgba(0,0,0,0.5);
     transition: background 0.2s;
-    -webkit-tap-highlight-color: transparent; /* Tắt nháy xanh cho nút bấm */
-}
-
-.btn-submit:active {
-    background: #1d4ed8;
-}
-
-/* Áp dụng cho toàn bộ các phần tử khác, bao gồm cả bảng canvas */
-* {
-    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation; /* Tối ưu hóa tốc độ phản hồi click trên mobile */
 }
 
 .btn-submit:active {
@@ -155,6 +154,7 @@ function getPos(e) {
         y: clientY - rect.top
     };
 }
+
 function start(e) {
     if (e.target === sendBtn) return;
     if (e.cancelable) e.preventDefault(); 
@@ -217,7 +217,6 @@ if ("serviceWorker" in navigator) {
             .catch(err => console.error("Lỗi SW:", err));
     });
 }
-
 </script>
 
 </body>
