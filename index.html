@@ -71,8 +71,8 @@ canvas {
     touch-action: none;
 }
 
+/* ĐOẠN CODE ĐÃ SỬA CÚ PHÁP */
 .btn-submit {
-
     position: absolute;
     right: 8px;
     bottom: 8px;
@@ -87,9 +87,16 @@ canvas {
     cursor: pointer;
     box-shadow: 0 4px 12px rgba(0,0,0,0.5);
     transition: background 0.2s;
-    * {
-    -webkit-tap-highlight-color: transparent; /* Tắt nháy xanh cho toàn bộ các phần tử */
+    -webkit-tap-highlight-color: transparent; /* Tắt nháy xanh cho nút bấm */
 }
+
+.btn-submit:active {
+    background: #1d4ed8;
+}
+
+/* Áp dụng cho toàn bộ các phần tử khác, bao gồm cả bảng canvas */
+* {
+    -webkit-tap-highlight-color: transparent;
 }
 
 .btn-submit:active {
