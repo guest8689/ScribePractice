@@ -10,6 +10,12 @@
     <title>Scribe Practice App</title>
 
 <style>
+    body, .card, canvas {
+    -webkit-user-select: none; /* Cho Safari/iOS */
+    -moz-user-select: none;    /* Cho Firefox */
+    -ms-user-select: none;     /* Cho IE/Edge cũ */
+    user-select: none;         /* Chuẩn chung (Android/Chrome...) */
+}
 * {
     margin: 0;
     padding: 0;
@@ -66,6 +72,7 @@ canvas {
 }
 
 .btn-submit {
+
     position: absolute;
     right: 8px;
     bottom: 8px;
