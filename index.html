@@ -3,7 +3,7 @@
 <head>
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#000000">
-    <link rel="apple-touch-icon" href="icon-192.png">
+    <link @link="apple-touch-icon" href="icon-192.png">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     
@@ -14,32 +14,23 @@
     <title>Scribe Practice App</title>
 
 <style>
-/* Chặn triệt để highlight, lựa chọn text, và menu ngữ cảnh hệ thống khi cài app */
-body, .card, canvas, .canvas-container, button {
-    -webkit-user-select: none;   /* Safari/iOS */
-    -moz-user-select: none;      /* Firefox */
-    -ms-user-select: none;       /* IE/Edge */
-    user-select: none;           /* Chrome/Android... */
-    -webkit-touch-callout: none; /* QUAN TRỌNG: Chặn menu copy/quét chữ/kính lúp trên iOS/Android */
-    -webkit-tap-highlight-color: transparent; /* Tắt nháy xanh khi nhấn vùng canvas/nút */
-}
-
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
-    font-family: Arial, Helvetica, sans-serif;
     -webkit-tap-highlight-color: transparent;
 }
 
 body {
     background: #000000;
-    color: #e2e8f0;
     display: flex;
     justify-content: center;
     align-items: center;
     height: 100vh;
     overflow: hidden;
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
 }
 
 .container {
@@ -47,59 +38,14 @@ body {
     max-width: 600px;
 }
 
-.card {
-    background: #000000;
-    padding: 16px;
-    border-radius: 16px;
-    border: 1px solid #27272a;
-}
-
-h2 {
-    font-size: 16px;
-    font-weight: normal;
-    margin-bottom: 12px;
-    color: #a1a1aa;
-}
-
-.canvas-container {
-    position: relative;
-    width: 100%;
-    height: 130px;
-    background: #09090b;
-    border-radius: 12px;
-    overflow: hidden;
-    border: 1px solid #3f3f46;
-}
-
 canvas {
-    position: absolute;
-    top: 0;
-    left: 0;
+    display: block;
     width: 100%;
-    height: 100%;
-    touch-action: none; /* Chặn cuộn trang/phóng to thu nhỏ khi đang vẽ */
-}
-
-.btn-submit {
-    position: absolute;
-    right: 8px;
-    bottom: 8px;
-    z-index: 10;
-    background: #3b82f6;
-    color: white;
-    border: none;
-    padding: 6px 14px;
-    border-radius: 20px;
-    font-size: 13px;
-    font-weight: bold;
-    cursor: pointer;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.5);
-    transition: background 0.2s;
-    touch-action: manipulation; /* Tối ưu hóa tốc độ phản hồi click trên mobile */
-}
-
-.btn-submit:active {
-    background: #1d4ed8;
+    background: #000000;
+    touch-action: none; 
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
 }
 </style>
 </head>
@@ -107,34 +53,79 @@ canvas {
 <body>
 
 <div class="container">
-    <div class="card">
-        <h2>Nhập từ (Viết tay)</h2>
-
-        <div class="canvas-container">
-            <canvas id="board"></canvas>
-            <button id="sendBtn" class="btn-submit">Gửi</button>
-        </div>
-    </div>
+    <canvas id="gameCanvas"></canvas>
 </div>
 
 <script>
-const sendBtn = document.getElementById("sendBtn");
-const canvas = document.getElementById("board");
+const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
 
 let drawing = false;
 let lastX = 0;
 let lastY = 0;
+let isOutside = false; // Biến cờ đánh dấu chuột vừa từ ngoài bảng đi vào
+
+let ui = {
+    padding: 16,
+    textY: 30,
+    board: { x: 0, y: 45, w: 0, h: 130 },
+    btn: { x: 0, y: 0, w: 65, h: 30, radius: 15 }
+};
 
 function resizeCanvas() {
-    const rect = canvas.getBoundingClientRect();
-    canvas.width = rect.width;
-    canvas.height = rect.height;
+    const containerWidth = canvas.parentElement.clientWidth;
+    canvas.width = containerWidth;
+    canvas.height = 45 + 130 + 16;
 
-    ctx.lineWidth = 3.5;
-    ctx.lineCap = "round";
-    ctx.lineJoin = "round";
-    ctx.strokeStyle = "#ffffff"; 
+    ui.board.w = canvas.width;
+    ui.btn.x = ui.board.w - ui.btn.w - 8;
+    ui.btn.y = ui.board.y + ui.board.h - ui.btn.h - 8;
+
+    drawEverything();
+}
+
+function drawEverything() {
+    ctx.fillStyle = "#000000";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    ctx.font = "16px Arial, Helvetica, sans-serif";
+    ctx.fillStyle = "#a1a1aa";
+    ctx.textAlign = "left";
+    ctx.textBaseline = "middle";
+    ctx.fillText("Nhập từ (Viết tay)", 0, ui.textY);
+
+    ctx.fillStyle = "#09090b";
+    ctx.fillRect(ui.board.x, ui.board.y, ui.board.w, ui.board.h);
+    ctx.strokeStyle = "#3f3f46";
+    ctx.lineWidth = 1;
+    ctx.strokeRect(ui.board.x, ui.board.y, ui.board.w, ui.board.h);
+
+    drawButton();
+}
+
+function drawButton() {
+    ctx.save();
+    ctx.fillStyle = "#3b82f6";
+    ctx.beginPath();
+    ctx.roundRect(ui.btn.x, ui.btn.y, ui.btn.w, ui.btn.h, ui.btn.radius);
+    ctx.fill();
+
+    ctx.font = "bold 13px Arial, Helvetica, sans-serif";
+    ctx.fillStyle = "#ffffff";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText("Gửi", ui.btn.x + (ui.btn.w / 2), ui.btn.y + (ui.btn.h / 2));
+    ctx.restore();
+}
+
+function isClickingButton(x, y) {
+    return x >= ui.btn.x && x <= ui.btn.x + ui.btn.w &&
+           y >= ui.btn.y && y <= ui.btn.y + ui.btn.h;
+}
+
+function isInsideBoard(x, y) {
+    return x >= ui.board.x && x <= ui.board.x + ui.board.w &&
+           y >= ui.board.y && y <= ui.board.y + ui.board.h;
 }
 
 function getPos(e) {
@@ -156,21 +147,35 @@ function getPos(e) {
 }
 
 function start(e) {
-    if (e.target === sendBtn) return;
     if (e.cancelable) e.preventDefault(); 
-    drawing = true;
     const p = getPos(e);
-    lastX = p.x;
-    lastY = p.y;
 
-    ctx.canvas.style.cursor = "pointer";
-    ctx.beginPath();
-    ctx.fillStyle = "#ffffff";
-    ctx.arc(p.x, p.y, ctx.lineWidth / 2, 0, Math.PI * 2);
-    ctx.fill();
-    
-    ctx.beginPath();
-    ctx.moveTo(p.x, p.y);
+    if (isClickingButton(p.x, p.y)) {
+        drawEverything();
+        if (navigator.vibrate) {
+            navigator.vibrate(20);
+        }
+        return;
+    }
+
+    if (isInsideBoard(p.x, p.y)) {
+        drawing = true;
+        isOutside = false; 
+        lastX = p.x;
+        lastY = p.y;
+
+        // Cấu hình nét vẽ chuẩn
+        ctx.lineWidth = 3.5;
+        ctx.lineCap = "round";
+        ctx.lineJoin = "round";
+        ctx.strokeStyle = "#ffffff";
+
+        // Vẽ một điểm chấm nhỏ ngay tại vị trí chạm đầu tiên
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, ctx.lineWidth / 2, 0, Math.PI * 2);
+        ctx.fillStyle = "#ffffff";
+        ctx.fill();
+    }
 }
 
 function move(e) {
@@ -179,19 +184,46 @@ function move(e) {
     
     const p = getPos(e);
 
-    ctx.beginPath();
-    ctx.moveTo(lastX, lastY);
-    ctx.lineTo(p.x, p.y);
-    ctx.stroke();
+    if (isInsideBoard(p.x, p.y)) {
+        // VẤN ĐỀ 2: Nếu trước đó lỡ đi ra ngoài bảng và giờ quay trở lại
+        if (isOutside) {
+            lastX = p.x;
+            lastY = p.y;
+            isOutside = false; // Reset cờ để tiếp tục vẽ mượt mà
+        }
 
-    lastX = p.x;
-    lastY = p.y;
+        ctx.lineWidth = 3.5;
+        ctx.lineCap = "round";
+        ctx.lineJoin = "round";
+        ctx.strokeStyle = "#ffffff";
+        
+        ctx.beginPath();
+        // VẤN ĐỀ 1: Để chống đứt quãng khi vẽ nhanh, ta tính điểm trung bình giữa điểm cũ và mới
+        // Vẽ đường cong Quadratic từ điểm cũ qua điểm trung gian (midpoint) mang lại nét cực mượt
+        const midX = (lastX + p.x) / 2;
+        const midY = (lastY + p.y) / 2;
+        
+        ctx.moveTo(lastX, lastY);
+        ctx.quadraticCurveTo(lastX, lastY, midX, midY);
+        ctx.lineTo(p.x, p.y);
+        ctx.stroke();
+
+        lastX = p.x;
+        lastY = p.y;
+        
+        drawButton();
+    } else {
+        // Nếu di chuyển ra ngoài vùng board, bật cờ để sẵn sàng nối nét khi quay lại
+        isOutside = true;
+    }
 }
 
 function end() {
     drawing = false;
+    isOutside = false;
 }
 
+// Gắn sự kiện chuẩn xác
 canvas.addEventListener("mousedown", start);
 canvas.addEventListener("touchstart", start, { passive: false });
 
@@ -199,13 +231,6 @@ window.addEventListener("mousemove", move);
 window.addEventListener("touchmove", move, { passive: false });
 window.addEventListener("mouseup", end);
 window.addEventListener("touchend", end);
-
-sendBtn.onclick = function() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    if (navigator.vibrate) {
-        navigator.vibrate(20);
-    }
-};
 
 window.addEventListener("resize", resizeCanvas);
 resizeCanvas();
