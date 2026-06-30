@@ -3,7 +3,7 @@
 <head>
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#000000">
-    <link rel="apple-touch-icon" href="icon-192.png">
+    <link <link rel="apple-touch-icon" href="icon-192.png">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     
@@ -63,6 +63,7 @@ const ctx = canvas.getContext("2d");
 let drawing = false;
 let lastX = 0;
 let lastY = 0;
+let justEnteredBoard = false; // Biến cờ mới sửa lỗi lem ra ngoài bảng
 
 let ui = {
     padding: 16,
@@ -102,9 +103,8 @@ function drawEverything() {
     drawButton();
 }
 
-// Tách hàm vẽ nút bấm ra riêng để gọi đè liên tục khi vẽ
 function drawButton() {
-    ctx.save(); // Lưu trạng thái canvas
+    ctx.save(); 
     ctx.fillStyle = "#3b82f6";
     ctx.beginPath();
     ctx.roundRect(ui.btn.x, ui.btn.y, ui.btn.w, ui.btn.h, ui.btn.radius);
@@ -115,7 +115,7 @@ function drawButton() {
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
     ctx.fillText("Gửi", ui.btn.x + (ui.btn.w / 2), ui.btn.y + (ui.btn.h / 2));
-    ctx.restore(); // Khôi phục trạng thái
+    ctx.restore(); 
 }
 
 function isClickingButton(x, y) {
@@ -160,6 +160,7 @@ function start(e) {
 
     if (isInsideBoard(p.x, p.y)) {
         drawing = true;
+        justEnteredBoard = false; // Reset cờ khi bắt đầu vẽ mới
         lastX = p.x;
         lastY = p.y;
 
@@ -175,37 +176,38 @@ function start(e) {
     }
 }
 
+// HÀM MOVE ĐÃ ĐƯỢC TỐI ƯU HOÀN CHỈNH ĐỂ SỬA 2 LỖI
 function move(e) {
     if (!drawing) return;
     if (e.cancelable) e.preventDefault(); 
     
     const p = getPos(e);
 
-    // FIX LỖI 2: Nếu chuột đang ở TRONG ô vẽ thì mới tiến hành vẽ nét
     if (isInsideBoard(p.x, p.y)) {
+        // Nếu trước đó lỡ quẹt tay ra ngoài, giờ quay lại bảng thì reset điểm đặt bút mới ngay tại rìa
+        if (justEnteredBoard) {
+            lastX = p.x;
+            lastY = p.y;
+            justEnteredBoard = false;
+        }
+
         ctx.lineWidth = 3.5;
         ctx.lineCap = "round";
         ctx.lineJoin = "round";
         ctx.strokeStyle = "#ffffff";
         
         ctx.beginPath();
-        // FIX LỖI 1: Thay vì lineTo, dùng quadraticCurveTo (đường cong Bezier) giúp quẹt nhanh không bị đứt góc phẳng
-        const midX = (lastX + p.x) / 2;
-        const midY = (lastY + p.y) / 2;
         ctx.moveTo(lastX, lastY);
-        ctx.quadraticCurveTo(lastX, lastY, midX, midY);
+        ctx.lineTo(p.x, p.y); // Nối thẳng liên tục giúp vẽ siêu nhanh không đứt đoạn
         ctx.stroke();
 
         lastX = p.x;
         lastY = p.y;
         
-        // Luôn vẽ đè nút Gửi lên trên cùng
-        drawButton();
+        drawButton(); // Luôn giữ nút gửi ở trên cùng
     } else {
-        // Nếu lỡ bay ra ngoài khung: KHÔNG tắt drawing, chỉ cập nhật lại tọa độ chặn cuối 
-        // để khi di chuột quay lại nó bắt đầu vẽ tiếp mượt mà từ rìa.
-        lastX = p.x;
-        lastY = p.y;
+        // Đánh dấu đã đi ra ngoài bảng
+        justEnteredBoard = true;
     }
 }
 
@@ -213,11 +215,9 @@ function end() {
     drawing = false;
 }
 
-// Lắng nghe sự kiện click/chạm trên canvas
 canvas.addEventListener("mousedown", start);
 canvas.addEventListener("touchstart", start, { passive: false });
 
-// QUAN TRỌNG: Lắng nghe move và end trên TOÀN WINDOW để xử lý việc di chuột ra ngoài canvas
 window.addEventListener("mousemove", move);
 window.addEventListener("touchmove", move, { passive: false });
 window.addEventListener("mouseup", end);
