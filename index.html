@@ -7,7 +7,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     
-    <!-- Cấu hình chặn mọi tính năng can thiệp của trình duyệt mobile -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="mobile-web-app-capable" content="yes">
@@ -29,7 +28,6 @@ body {
     align-items: center;
     height: 100vh;
     overflow: hidden;
-    /* Chặn triệt để mọi hành vi chọn/quét trên body bên ngoài canvas */
     -webkit-user-select: none;
     user-select: none;
     -webkit-touch-callout: none;
@@ -40,12 +38,11 @@ body {
     max-width: 600px;
 }
 
-/* Biến canvas thành chiếc "màn hình game" duy nhất bao trọn ứng dụng */
 canvas {
     display: block;
     width: 100%;
     background: #000000;
-    touch-action: none; /* Khóa cuộn trang, phóng to thu nhỏ */
+    touch-action: none; 
     -webkit-user-select: none;
     user-select: none;
     -webkit-touch-callout: none;
@@ -56,7 +53,6 @@ canvas {
 <body>
 
 <div class="container">
-    <!-- Mọi thứ: chữ, khung vẽ, nút bấm giờ là MỘT chiếc canvas này -->
     <canvas id="gameCanvas"></canvas>
 </div>
 
@@ -68,7 +64,6 @@ let drawing = false;
 let lastX = 0;
 let lastY = 0;
 
-// Cấu hình tọa độ và kích thước cho các phần tử vẽ (được tính toán động)
 let ui = {
     padding: 16,
     textY: 30,
@@ -77,64 +72,57 @@ let ui = {
 };
 
 function resizeCanvas() {
-    // Lấy chiều rộng của container để làm canvas co giãn theo màn hình
     const containerWidth = canvas.parentElement.clientWidth;
-    
-    // Tổng chiều cao canvas = Khung vẽ (130px) + Tiêu đề phía trên (45px) + Padding dưới (16px)
     canvas.width = containerWidth;
     canvas.height = 45 + 130 + 16;
 
-    // Cập nhật lại tọa độ và kích thước vùng vẽ chữ viết tay
     ui.board.w = canvas.width;
-    
-    // Cập nhật tọa độ nút "Gửi" nằm ở góc phải dưới của vùng vẽ (cách mép 8px)
     ui.btn.x = ui.board.w - ui.btn.w - 8;
     ui.btn.y = ui.board.y + ui.board.h - ui.btn.h - 8;
 
     drawEverything();
 }
 
-// Hàm vẽ lại toàn bộ giao diện app
 function drawEverything() {
-    // 1. Xóa nền toàn bộ app (Màu đen nền giấy)
     ctx.fillStyle = "#000000";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // 2. Vẽ chữ "Nhập từ (Viết tay)"
     ctx.font = "16px Arial, Helvetica, sans-serif";
     ctx.fillStyle = "#a1a1aa";
     ctx.textAlign = "left";
     ctx.textBaseline = "middle";
     ctx.fillText("Nhập từ (Viết tay)", 0, ui.textY);
 
-    // 3. Vẽ Khung chứa vùng viết tay (Viền xám, nền đen đậm)
     ctx.fillStyle = "#09090b";
     ctx.fillRect(ui.board.x, ui.board.y, ui.board.w, ui.board.h);
     ctx.strokeStyle = "#3f3f46";
     ctx.lineWidth = 1;
     ctx.strokeRect(ui.board.x, ui.board.y, ui.board.w, ui.board.h);
 
-    // 4. Vẽ Nút "Gửi" dạng bo tròn (Màu xanh)
+    drawButton();
+}
+
+// Tách hàm vẽ nút bấm ra riêng để gọi đè liên tục khi vẽ
+function drawButton() {
+    ctx.save(); // Lưu trạng thái canvas
     ctx.fillStyle = "#3b82f6";
     ctx.beginPath();
     ctx.roundRect(ui.btn.x, ui.btn.y, ui.btn.w, ui.btn.h, ui.btn.radius);
     ctx.fill();
 
-    // 5. Vẽ Chữ "Gửi" nằm chính giữa nút xanh
     ctx.font = "bold 13px Arial, Helvetica, sans-serif";
     ctx.fillStyle = "#ffffff";
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
     ctx.fillText("Gửi", ui.btn.x + (ui.btn.w / 2), ui.btn.y + (ui.btn.h / 2));
+    ctx.restore(); // Khôi phục trạng thái
 }
 
-// Hàm kiểm tra xem ngón tay chạm vào có trúng nút "Gửi" không
 function isClickingButton(x, y) {
     return x >= ui.btn.x && x <= ui.btn.x + ui.btn.w &&
            y >= ui.btn.y && y <= ui.btn.y + ui.btn.h;
 }
 
-// Hàm kiểm tra xem ngón tay có nằm trong vùng được phép viết tay không
 function isInsideBoard(x, y) {
     return x >= ui.board.x && x <= ui.board.x + ui.board.w &&
            y >= ui.board.y && y <= ui.board.y + ui.board.h;
@@ -162,9 +150,7 @@ function start(e) {
     if (e.cancelable) e.preventDefault(); 
     const p = getPos(e);
 
-    // BƯỚC XỬ LÝ CLICK NÚT GỬI: Nếu bấm trúng tọa độ nút thì xóa bảng
     if (isClickingButton(p.x, p.y)) {
-        // Vẽ lại khung nền để xóa nét chữ cũ
         drawEverything();
         if (navigator.vibrate) {
             navigator.vibrate(20);
@@ -172,7 +158,6 @@ function start(e) {
         return;
     }
 
-    // BƯỚC XỬ LÝ VẼ: Chỉ cho phép vẽ nếu đặt bút TRONG khung viết tay và KHÔNG trúng nút Gửi
     if (isInsideBoard(p.x, p.y)) {
         drawing = true;
         lastX = p.x;
@@ -183,14 +168,10 @@ function start(e) {
         ctx.lineJoin = "round";
         ctx.strokeStyle = "#ffffff";
 
-        // Vẽ một điểm chấm tại chỗ vừa chạm
         ctx.beginPath();
         ctx.fillStyle = "#ffffff";
         ctx.arc(p.x, p.y, ctx.lineWidth / 2, 0, Math.PI * 2);
         ctx.fill();
-        
-        ctx.beginPath();
-        ctx.moveTo(p.x, p.y);
     }
 }
 
@@ -200,29 +181,31 @@ function move(e) {
     
     const p = getPos(e);
 
-    // GIỚI HẠN NÉT VẼ: Chỉ vẽ tiếp nếu ngón tay di chuyển trong khung viết tay
+    // FIX LỖI 2: Nếu chuột đang ở TRONG ô vẽ thì mới tiến hành vẽ nét
     if (isInsideBoard(p.x, p.y)) {
+        ctx.lineWidth = 3.5;
+        ctx.lineCap = "round";
+        ctx.lineJoin = "round";
+        ctx.strokeStyle = "#ffffff";
+        
         ctx.beginPath();
+        // FIX LỖI 1: Thay vì lineTo, dùng quadraticCurveTo (đường cong Bezier) giúp quẹt nhanh không bị đứt góc phẳng
+        const midX = (lastX + p.x) / 2;
+        const midY = (lastY + p.y) / 2;
         ctx.moveTo(lastX, lastY);
-        ctx.lineTo(p.x, p.y);
+        ctx.quadraticCurveTo(lastX, lastY, midX, midY);
         ctx.stroke();
 
         lastX = p.x;
         lastY = p.y;
         
-        // Vẽ đè lại nút "Gửi" để nét chữ không bao giờ đè lên nút
-        ctx.fillStyle = "#3b82f6";
-        ctx.beginPath();
-        ctx.roundRect(ui.btn.x, ui.btn.y, ui.btn.w, ui.btn.h, ui.btn.radius);
-        ctx.fill();
-        ctx.font = "bold 13px Arial, Helvetica, sans-serif";
-        ctx.fillStyle = "#ffffff";
-        ctx.textAlign = "center";
-        ctx.textBaseline = "middle";
-        ctx.fillText("Gửi", ui.btn.x + (ui.btn.w / 2), ui.btn.y + (ui.btn.h / 2));
+        // Luôn vẽ đè nút Gửi lên trên cùng
+        drawButton();
     } else {
-        // Nếu ngón tay lỡ kéo ra ngoài khung thì ngừng vẽ luôn
-        drawing = false;
+        // Nếu lỡ bay ra ngoài khung: KHÔNG tắt drawing, chỉ cập nhật lại tọa độ chặn cuối 
+        // để khi di chuột quay lại nó bắt đầu vẽ tiếp mượt mà từ rìa.
+        lastX = p.x;
+        lastY = p.y;
     }
 }
 
@@ -230,10 +213,11 @@ function end() {
     drawing = false;
 }
 
-// Lắng nghe sự kiện chạm trực tiếp trên canvas
+// Lắng nghe sự kiện click/chạm trên canvas
 canvas.addEventListener("mousedown", start);
 canvas.addEventListener("touchstart", start, { passive: false });
 
+// QUAN TRỌNG: Lắng nghe move và end trên TOÀN WINDOW để xử lý việc di chuột ra ngoài canvas
 window.addEventListener("mousemove", move);
 window.addEventListener("touchmove", move, { passive: false });
 window.addEventListener("mouseup", end);
@@ -242,7 +226,6 @@ window.addEventListener("touchend", end);
 window.addEventListener("resize", resizeCanvas);
 resizeCanvas();
 
-// Đăng ký Service Worker (PWA) như cũ
 if ("serviceWorker" in navigator) {
     window.addEventListener("load", () => {
         navigator.serviceWorker.register("./sw.js")
